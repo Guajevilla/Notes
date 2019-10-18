@@ -1,0 +1,58 @@
+{
+    "created_time": "2019-07-05T08:23:43Z",
+    "files": [
+        {
+            "attachment_folder": "",
+            "attachments": [
+            ],
+            "created_time": "2019-07-23T02:26:50Z",
+            "modified_time": "2019-07-25T13:38:15Z",
+            "name": "分类与归纳.md",
+            "tags": [
+            ]
+        },
+        {
+            "attachment_folder": "",
+            "attachments": [
+            ],
+            "created_time": "2019-07-05T08:23:58Z",
+            "modified_time": "2019-07-05T08:24:31Z",
+            "name": "MV3D.md",
+            "tags": [
+            ]
+        },
+        {
+            "attachment_folder": "",
+            "attachments": [
+            ],
+            "created_time": "2019-07-22T08:56:14Z",
+            "modified_time": "2019-08-02T07:55:04Z",
+            "name": "PointNet.md",
+            "tags": [
+            ]
+        },
+        {
+            "attachment_folder": "",
+            "attachments": [
+            ],
+            "created_time": "2019-07-25T08:45:25Z",
+            "modified_time": "2019-09-23T02:47:33Z",
+            "name": "PointNet++.md",
+            "tags": [
+            ]
+        },
+        {
+            "attachment_folder": "",
+            "attachments": [
+            ],
+            "created_time": "2019-10-10T03:08:46Z",
+            "modified_time": "2019-10-12T12:23:33Z",
+            "name": "PointCNN.md",
+            "tags": [
+            ]
+        }
+    ],
+    "sub_directories": [
+    ],
+    "version": "1"
+}
