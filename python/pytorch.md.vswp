@@ -1,3 +1,4 @@
+vnote_backup_file_826537664 /home/kun/Documents/Notes/python/pytorch.md
 # pytorch
 ## in-place
 任何在原地(in-place)改变张量的操作都有一个’_’后缀。将改变自身值！
