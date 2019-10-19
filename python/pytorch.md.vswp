@@ -638,6 +638,7 @@ def index_points(points, idx):
 ## torch.gather
 ```python
 """
+    就是dim是几,就在该位置用输入的index顺序填充,不同的括号表示dim+1
     For a 3-D tensor the output is specified by:
 
     out[i][j][k] = input[index[i][j][k]][j][k]  # dim=0
@@ -682,4 +683,9 @@ sqrdists = square_distance(pts, xyz)    # (B,P,N)
 k_ind = sqrdists.sort(dim=-1)[1][:, :, :K*D]  # (B,P,K*D)
 rand_columns = torch.randperm(K*D, dtype=torch.long)[:K].to(device)
 k_ind = k_ind[:, :, rand_columns]
+# 还是会重复
+B, N, C, M = 2, 3, 4, 5
+x = torch.randn(B, N, C)
+idx = torch.randint(0, C, (B, N, M))
+torch.gather(x, 2, idx)
 ```

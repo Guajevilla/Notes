@@ -1,3 +1,4 @@
+vnote_backup_file_826537664 /home/kun/Documents/Notes/DeepLearning/Cloud Point/PointNet.md
 # PointNet
 由于点云数据的特殊性，之前的大多数研究将点云划分为体素，但这样会使数据不必要的变大。
 本文直接输入点云，充分重视其置换不变性（permutation invariance)，利用对称函数（max pooling）解决。文中使用经验和理论方法证明了该方法可用于近似任何连续函数。更有趣的是，本网络大概学到的是点云中的关键点（点云的稀疏表示集），类似于骨架，因而该架构对噪音比较鲁棒。
