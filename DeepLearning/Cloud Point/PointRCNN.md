@@ -58,7 +58,7 @@ $\mathcal{F}_{\text {cls}}$是分类交叉熵损失，$\mathcal{F}_{\text {reg}}
 ### 2. 点云区域池化
 由于下一阶段需要进一步优化定位信息，需要得到更详细的局部特征。所以这里需要一个池化的结构。
 
-对于每一个proposal，$\mathbf{b}_{i}=(x_{i},y_{i},z_{i},h_{i},w_{i},l_{i},\theta_{i})$，将其稍微扩大为$\mathbf{b}_{i}^{e}=(x_{i},y_{i},z_{i},h_{i}+\eta, w_{i}+\eta,l_{i}+\eta,\theta_{i})$来从背景中提取出一些额外信息。对于每一个点，判断其是否落在这个扩大过后的proposal中，若在其中，则将其特征（包括位置特征$(x^{(p)},y^{(p)},z^{(p)})\in\mathbb{R^3}$，激光反射信息$r^{(p)}\in\mathbb{R}$，前一阶段预测的mask$m^{(p)}\in\{0,1\}$，和C维点云学习到的表示$f^{(p)}\in\mathbb{R}^C$）保留。其中$m^{(p)}\in\{0,1\}$主要用于判断proposal中的点是否是前景点。如果一个proposal中没有点，则直接删除这个proposal。
+对于每一个proposal，$\mathbf{b}_{i}=(x_{i},y_{i},z_{i},h_{i},w_{i},l_{i},\theta_{i})$，将其稍微扩大为$\mathbf{b}_{i}^{e}=(x_{i},y_{i},z_{i},h_{i}+\eta, w_{i}+\eta,l_{i}+\eta,\theta_{i})$来从背景中提取出一些额外信息，这样稍微扩大的操作有利于结合上下文判断，在KITTI难例检测中表现良好（难例的点少）。对于每一个点，判断其是否落在这个扩大过后的proposal中，若在其中，则将其特征（包括位置特征$(x^{(p)},y^{(p)},z^{(p)})\in\mathbb{R^3}$，激光反射信息$r^{(p)}\in\mathbb{R}$，前一阶段预测的mask$m^{(p)}\in\{0,1\}$，和C维点云学习到的表示$f^{(p)}\in\mathbb{R}^C$）保留。其中$m^{(p)}\in\{0,1\}$主要用于判断proposal中的点是否是前景点。如果一个proposal中没有点，则直接删除这个proposal。
 ### 3. 规范3D边界框优化
 #### 规范坐标转化
 ![2019-10-28 21-31-07屏幕截图](_v_images/20191028213127377_633419140.png)
@@ -70,4 +70,29 @@ $\mathcal{F}_{\text {cls}}$是分类交叉熵损失，$\mathcal{F}_{\text {reg}}
 #### proposal优化损失
 当真值与proposal的IoU超过0.55时，便将这个真值赋给该proposal。这里要注意真值也要转化到规范坐标系中，也就是说，proposal参数变为$\tilde{\mathbf{b}}_{i}=(0,0,0, h_{i}, w_{i}, l_{i}, 0)$，真值参数变为$\tilde{\mathbf{b}}_{i}^{\mathrm{gt}} =(x_{i}^{\mathrm{gt}}-x_{i}, y_{i}^{\mathrm{gt}}-y_{i}, z_{i}^{\mathrm{gt}}-z_{i}, h_{i}^{\mathrm{gt}}, w_{i}^{\mathrm{gt}}, l_{i}^{\mathrm{gt}}, \theta_{i}^{\mathrm{gt}}-\theta_{i})$
 训练中第$i$个proposal的位置目标同前，也是这么设置的：$\left(\operatorname{bin}_{\Delta x}^{i}, \operatorname{bin}_{\Delta z}^{i}, \operatorname{res}_{\Delta x}^{i}, \operatorname{res}_{\Delta z}^{i}, \operatorname{res}_{\Delta y}^{i}\right)$；不同之处在于这里由于需要进一步优化定位信息，所以选用的搜索区域$S$较前面的小。同样直接回归相对于该类别平均物体尺寸的残差$\left(\operatorname{res}^{i} \Delta h, \operatorname{res}_{\Delta w}^{i}, \operatorname{res}_{\Delta l}^{i}\right)$
-对于取向
+对于取向角的优化，由于IoU至少有0.55，我们先假设真值和前一步的预测值之差$\theta_i^{gt}-\theta_i$在$[-\frac{\pi}{4},\frac{\pi}{4}]$之间。同样的，将这$\frac{\pi}{2}$的范围分为尺寸为$w$的bin，预测分类和回归残差:
+```mathjax
+$$
+\begin{array}{l}{\operatorname{bin}_{\Delta \theta}^{i}=\left[\frac{\theta_{i}^{\mathrm{gt}}-\theta_{i}+\frac{\pi}{4}}{\omega}\right]} \\ {\operatorname{res}_{\Delta \theta}^{i}=\frac{2}{\omega}\left(\theta_{i}^{\mathrm{gt}}-\theta_{i}+\frac{\pi}{4}-\left(\operatorname{bin}_{\Delta \theta}^{i} \cdot \omega+\frac{\omega}{2}\right)\right)}\end{array}
+$$
+```
+因此，第二阶段的总体损失如下：
+```mathjax
+$$
+\mathcal{L}_{\text {refine }}= \frac{1}{\|\mathcal{B}\|} \sum_{i \in \mathcal{B}} \mathcal{F}_{\text {cls}}\left(\text {prob}_{i}, \text {label}_{i}\right)
++\frac{1}{\left\|\mathcal{B}_{\text {pos}}\right\|} \sum_{i \in \mathcal{B}_{\text {pos }}}\left(\tilde{\mathcal{L}}_{\text {bin}}^{(i)}+\tilde{\mathcal{L}}_{\text {res}}^{(i)}\right)
+$$
+```
+其中$\mathcal{B}$是第一阶段proposal集合，$\mathcal{B}_{pos}$是正例的proposal，$\text {prob}_{i}$是$\tilde{\mathbf{b}_i}$框的预计置信度，$\text {label}_{i}$是其相对应的标签，$\mathcal{F}_{\text {cls}}$是分类交叉熵损失；
+
+最终采样有方向的鸟瞰图NMS，IoU阈值设为0.01来去除重叠。
+### 4. 实验
+以KITTI数据集为例：
+#### 网络架构
+首先，每个场景下采样16,384个点作为输入，若场景内点数量小于16,384则随机重复某些点。
+segmentation使用Pointnet++架构，用了4个SA层，MSG下采样为4096,1024,256,64大小，接着有4个FP层用于获得逐点的特征向量用于分割和proposal。
+第二阶段的优化网络中，再从池化过后的区域中随机采样512个点作为输入，用了3个SA层，单一尺寸分组为128,32,1大小，用于产生用于置信度分类和定位优化的特征。
+
+第一阶段子网络中所有在真值框内的点为前景点，训练时，基于bin的proposal中，设置$S=3m,\delta=0.5m$方向角平均分12份bin。分类时，只有当产生的proposal与真值的IoU大于0.6时，才考虑为正例，IoU小于0.45时，才考虑为反例；回归时IoU阈值设为0.55。
+第二阶段优化时，设置$S=1.5m,\delta=0.5m$方向角bin尺寸$\omega=10^o$，边界框扩大尺度$\eta=1.0m$。
+两阶段网络分别训练。本方法经实验证明召回率极高。
